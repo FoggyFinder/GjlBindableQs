@@ -3,7 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.136
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{D09582DC-3486-41BB-9F37-5D319B6ED922}"
+	ProjectSection(SolutionItems) = preProject
+		paket.dependencies = paket.dependencies
+	EndProjectSection
+EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "GeneralDialog", "GeneralDialog\GeneralDialog.fsproj", "{0A76D208-44A9-47FA-83C4-3E4C8EFC2A10}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SelfUpdComponent", "SelfUpdComponent\SelfUpdComponent.fsproj", "{ADCE631A-7B15-4679-94F6-6951242C7762}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +22,10 @@ Global
 		{0A76D208-44A9-47FA-83C4-3E4C8EFC2A10}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A76D208-44A9-47FA-83C4-3E4C8EFC2A10}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A76D208-44A9-47FA-83C4-3E4C8EFC2A10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADCE631A-7B15-4679-94F6-6951242C7762}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADCE631A-7B15-4679-94F6-6951242C7762}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADCE631A-7B15-4679-94F6-6951242C7762}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADCE631A-7B15-4679-94F6-6951242C7762}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
