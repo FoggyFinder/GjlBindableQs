@@ -64,7 +64,7 @@ module GeneralComponent =
         |> source.AddDisposable
 
         [
-            Bind.Explicit.createCommandChecked "SaveCommand" source.Valid source
+            Bind.Explicit.createCommand "SaveCommand" source
             |> Observable.map (fun _ -> v.Value)
         ]
 
