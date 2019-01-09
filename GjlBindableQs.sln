@@ -14,6 +14,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SelfUpdComponent", "SelfUpd
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NavigationMenu", "NavigationMenu\NavigationMenu.fsproj", "{082053F0-0397-4D8D-B7FA-DA75F956E0A2}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FsXamlSample", "FsXamlSample\FsXamlSample.fsproj", "{8B3A6476-AC0B-494D-B5A0-57CC77B69993}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{082053F0-0397-4D8D-B7FA-DA75F956E0A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{082053F0-0397-4D8D-B7FA-DA75F956E0A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{082053F0-0397-4D8D-B7FA-DA75F956E0A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B3A6476-AC0B-494D-B5A0-57CC77B69993}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B3A6476-AC0B-494D-B5A0-57CC77B69993}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B3A6476-AC0B-494D-B5A0-57CC77B69993}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B3A6476-AC0B-494D-B5A0-57CC77B69993}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
