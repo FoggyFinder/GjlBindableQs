@@ -182,7 +182,7 @@ let main _ =
         | NavMessages.Page4  ->
             Navigation.Page.fromComponent
                 Views.createPage4
-                (fun _ -> { Text = "This is the fourths page" })
+                (fun _ -> { Text = "This is the fourth page" })
                 pageComponent 
                 id
         | NavMessages.Init  ->
