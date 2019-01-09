@@ -149,6 +149,7 @@
     <Resource Include="Page1.xaml" />
     <Resource Include="MainWindow.xaml" />
     <Resource Include="Menu.xaml" />
+    <Resource Include="InitView.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
