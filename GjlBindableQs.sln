@@ -12,6 +12,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "GeneralDialog", "GeneralDia
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SelfUpdComponent", "SelfUpdComponent\SelfUpdComponent.fsproj", "{ADCE631A-7B15-4679-94F6-6951242C7762}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NavigationMenu", "NavigationMenu\NavigationMenu.fsproj", "{082053F0-0397-4D8D-B7FA-DA75F956E0A2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
 		{ADCE631A-7B15-4679-94F6-6951242C7762}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADCE631A-7B15-4679-94F6-6951242C7762}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADCE631A-7B15-4679-94F6-6951242C7762}.Release|Any CPU.Build.0 = Release|Any CPU
+		{082053F0-0397-4D8D-B7FA-DA75F956E0A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{082053F0-0397-4D8D-B7FA-DA75F956E0A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{082053F0-0397-4D8D-B7FA-DA75F956E0A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{082053F0-0397-4D8D-B7FA-DA75F956E0A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
