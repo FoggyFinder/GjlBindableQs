@@ -1,4 +1,4 @@
-﻿namespace SelfUpdComponent.AssemblyInfo
+﻿namespace FsXamlSample.AssemblyInfo
 
 open System.Reflection
 open System.Runtime.CompilerServices

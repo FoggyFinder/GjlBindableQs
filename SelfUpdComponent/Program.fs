@@ -11,125 +11,134 @@ module Views =
 
 open Gjallarhorn.Wpf
 open Gjallarhorn.Bindable
-open Gjallarhorn
 open Gjallarhorn.Validation
-
-module WrapperComponent = 
-    let private explicit name c nav (source:BindingSource) model =
-        let v = model |> Signal.get |> Mutable.create
-        Bind.Explicit.componentOneWay source name nav c v
-        |> Observable.subscribe (fun t -> v.Value <- t)
-        |> source.AddDisposable
-
-        [ ]
-
-    let bindIgnoreMessageComponentWithName name c = 
-        explicit name c |> Component.fromExplicit
 
 [<RequireQualifiedAccess>]
 type NavMessages = 
     | Page1
     | Page2
 
-type Model = int list
-
 [<RequireQualifiedAccess>]
-type Page1Messages = 
+type Messages = 
     | Generate of int
-    | Nothing 
+    | Choose of int
+
+type Page1Model = int list
 
 type Page1VM = {
-    Value: Model
+    Model: Page1Model
     Page2: VmCmd<NavMessages>
-} with member x.Count = x.Value.Length
+} with member x.Count = x.Model.Length
+       static member Default = {
+                Model = []
+                Page2 = Vm.cmd NavMessages.Page2       
+       }
 
-let defp1 = {
-    Value = []
-    Page2 = Vm.cmd NavMessages.Page2
-}
+let defp1 = Page1VM.Default
 
 let page1Component = 
-    Component.create<Page1VM, NavMessages, Page1Messages> [
+    Component.create<Page1Model, NavMessages, Messages> [
         <@ defp1.Count @> 
         |> Bind.twoWayValidated 
-            (fun vm -> vm.Count) 
+            (fun vm -> vm.Length) 
             (Validators.greaterThan 10 >> Validators.lessOrEqualTo 2000) 
-            Page1Messages.Generate
+            Messages.Generate
         <@ defp1.Page2 @> |> Bind.cmd |> Bind.toNav
     ]
 
-[<RequireQualifiedAccess>]
-type Page2Messages = 
-    | ChooseGroup of int
+type Page2Model = {
+    CurrentData : int list
+    CurrentGroup : int
+    Groups : int []
+}
 
 type Page2VM = {
-    Data : Model
-    CurrentGroup : int
-    CountInGroup : int
+    Model : Page2Model
     Page1: VmCmd<NavMessages>
-} 
-with member x.CurrentData = 
-        x.Data
-        |> List.skip (x.CountInGroup * (x.CurrentGroup - 1))
-        |> List.truncate x.CountInGroup
-     member x.Groups = 
-        let count = 
-            float x.Data.Length / float x.CountInGroup
-            |> Math.Ceiling
-            |> int
-        [| 1..count |]
-     static member Create data = 
-        let current = 1
-        let initCount = 50
+} with
+     static member Default = 
         { Page1 = Vm.cmd NavMessages.Page1 
-          Data = data
-          CurrentGroup = current
-          CountInGroup = initCount }
+          Model = 
+            { Groups = [| |]
+              CurrentData = []
+              CurrentGroup = -1 } }
 
-let defp2 = {
-    Data = []
-    CurrentGroup = 0
-    CountInGroup = 0
-    Page1 = Vm.cmd NavMessages.Page1
-} 
-let upd message model = 
-    match message with
-    | Page2Messages.ChooseGroup v -> { model with CurrentGroup = v }
+let defp2 = Page2VM.Default
 
-let page2Component : IComponent<Page2VM, NavMessages, Page1Messages> = 
-    Component.create<Page2VM, NavMessages, Page2Messages> [
-        <@ defp2.CurrentData @> |> Bind.oneWay (fun vm -> vm.CurrentData)
-        <@ defp2.CurrentGroup @> |> Bind.twoWay (fun vm -> vm.CurrentGroup) Page2Messages.ChooseGroup
-        <@ defp2.Groups @> |> Bind.oneWay (fun vm -> vm.Groups)
+let page2Component = 
+    Component.create<Page2Model, NavMessages, Messages> [
+        <@ defp2.Model.CurrentData @> |> Bind.oneWay (fun vm -> vm.CurrentData)
+        <@ defp2.Model.CurrentGroup @> |> Bind.twoWay (fun vm -> vm.CurrentGroup) Messages.Choose
+        <@ defp2.Model.Groups @> |> Bind.oneWay (fun vm -> vm.Groups)
         <@ defp2.Page1 @> |> Bind.cmd |> Bind.toNav
-    ] |> Component.toSelfUpdating upd
-    |> WrapperComponent.bindIgnoreMessageComponentWithName "Comp"
+    ]
+
+type Model = { 
+    Page1 : Page1Model 
+    Page2 : Page2Model
+}
+
+let init = {
+    Page1 = []
+    Page2 = Page2VM.Default.Model
+}
 
 open Gjallarhorn.Bindable.Framework
-let update message model =
+
+let groups countInGroup data = 
+    let count = 
+        float (data |> Seq.length) / float countInGroup
+        |> Math.Ceiling
+        |> int
+    [| 1..count |]
+
+let getData data countInGroup current = 
+    data
+    |> List.skip (countInGroup * (current - 1))
+    |> List.truncate countInGroup    
+
+let update message (model : Model) =
+    let countInGroup = 50
     match message with
-    | Page1Messages.Generate v -> 
-        { model with Value = List.init v id }
-    | Page1Messages.Nothing -> model
+    | Messages.Generate v ->
+        let current = 1 
+        let data = List.init v id 
+        { Page1 = data
+          Page2 = {
+            CurrentData = getData data countInGroup current
+            Groups = groups countInGroup data
+            CurrentGroup = current
+          }
+        }
+    | Messages.Choose v -> 
+        { model with 
+            Page2 = { 
+              model.Page2 with 
+                CurrentGroup = v 
+                CurrentData = getData model.Page1 countInGroup v } }
+
+let appComp =
+    Component.create<Model, NavMessages, Messages> [
+        <@ init.Page1 @> |> Bind.comp (fun m -> m.Page1) page1Component fst
+        <@ init.Page2 @> |> Bind.comp (fun m -> m.Page2) page2Component fst
+    ]
 
 let applicationCore nav =
     let navigation = Dispatcher<NavMessages>()
-    Framework.application defp1 update page1Component nav
+    Framework.application init update appComp nav
     |> Framework.withNavigation navigation
 
 [<EntryPoint>]
 [<STAThread>]
 let main _ = 
-    let updateNavigation (app : ApplicationCore<Page1VM,_,_>) request =
+    let updateNavigation (app : ApplicationCore<Model,_,_>) request =
         match request with
         | NavMessages.Page1  ->
-            Navigation.Page.create Views.Page1 page1Component
+            Navigation.Page.fromComponent
+                Views.Page1 (fun vm -> vm.Page1) page1Component id
         | NavMessages.Page2 -> 
             Navigation.Page.fromComponent 
-                Views.Page2
-                (fun p1 -> p1.Value |> Page2VM.Create) 
-                page2Component 
-                (fun _ -> Page1Messages.Nothing)
+                Views.Page2 (fun vm -> vm.Page2) page2Component id
 
     let navigator = Navigation.singlePage Windows.Application Views.MainWindow NavMessages.Page1 updateNavigation 
 
