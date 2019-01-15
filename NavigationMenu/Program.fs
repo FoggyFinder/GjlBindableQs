@@ -47,86 +47,110 @@ type Messages =
     | MenuUpdate of MenuMessages
     | GoIn
 
+module PageComponent = 
+    type PageModel = { PageText : string } 
+
+    let def = { PageText = "" }
+
+    let pageComponent = 
+        Component.create<PageModel, NavMessages, Messages> [
+            <@ def.PageText @>  |> Bind.oneWay (fun v -> v.PageText)
+        ]
+
+module InitComponent = 
+    type InitModel = { Text : string }
+    type InitVM = { Model: InitModel; Message : VmCmd<Messages> } 
+    
+    let defi = { Model = { Text = "" } ; Message = Vm.cmd Messages.GoIn }
+
+    let initComponent = 
+        Component.create<InitModel, NavMessages, Messages> [
+            <@ defi.Message @>  |> Bind.cmd
+            <@ defi.Model.Text @> |> Bind.oneWay (fun v -> v.Text)
+        ]
+
+
 [<RequireQualifiedAccess>]
 type State = 
-    | In
-    | Out
+     | In
+     | Out
 
-type PageVM = { Text : string } 
+module MenuComponent = 
+    type MenuItem = { 
+        IsEnabled : bool
+        Text : string
+        Command : MenuMessages
+    } 
 
-let def = { Text = "" }
+    type Menu = { Items : MenuItem list }
 
-let pageComponent = 
-    Component.create<PageVM, NavMessages, Messages> [
-        <@ def.Text @>  |> Bind.oneWay (fun v -> v.Text)
-    ]
+    type MenuVM = {
+        Menu : Menu
+        Request : VmCmd<MenuMessages>
+    }
 
-type InitVM = { Message : VmCmd<Messages> } 
+    let createMenuItem state =
+        let toMenuItem (title, command, state) = 
+            { Text = title
+              Command = command
+              IsEnabled = state }
 
-let defi = { Message = Vm.cmd Messages.GoIn }
+        match state with
+        | State.In ->
+            [ "Page1", MenuMessages.ToPage1, true
+              "Page2", MenuMessages.ToPage2, true
+              "GoOut", MenuMessages.GoOut, true ]
+        | State.Out ->
+            [ "Page1", MenuMessages.ToPage1, true
+              "Page2", MenuMessages.ToPage2, false
+              "ToInit", MenuMessages.ToStart, true ]
+        |> List.map toMenuItem
 
-let initComponent = 
-    Component.create<InitVM, NavMessages, Messages> [
-        <@ defi.Message @>  |> Bind.cmd
-    ]
+    let createMenu state = { Items = state |> createMenuItem }
+    
+    let defMenu = { 
+        Menu = { Items = []  }
+        Request = Vm.cmd MenuMessages.ToStart
+    }
 
-type MenuItem = { 
-    IsEnabled : bool
-    Text : string
-    Command : MenuMessages
-} 
+    let toNavigation =
+        function
+        | MenuMessages.ToPage1 -> NavMessages.Page1
+        | MenuMessages.ToPage2 -> NavMessages.Page2
+        | MenuMessages.ToStart 
+        | MenuMessages.GoOut -> NavMessages.Init
 
-type Menu = {
-    Items : MenuItem list
+    let menuComponent = 
+        Component.create<Menu, NavMessages, MenuMessages> [
+            <@ defMenu.Menu.Items @> |> Bind.oneWay (fun vm -> vm.Items)
+            <@ defMenu.Request @> |> Bind.cmdParam (fun vm -> vm)
+        ] |> Component.withMappedMessages Messages.MenuUpdate
+
+open MenuComponent
+open PageComponent
+open InitComponent
+
+// App
+type AppModel = { 
+    Page : PageModel 
+    Menu : Menu
+    Init : InitModel
     State : State
 }
 
-type MenuVM = {
-    Menu : Menu
-    Request : VmCmd<MenuMessages>
+let init = {
+    Page = { PageText = "" }
+    Menu = createMenu State.Out
+    Init = { Text = "Some text" }
+    State = State.Out
 }
 
-let createMenuItem state =
-    let toMenuItem (title, command, state) = 
-        { Text = title
-          Command = command
-          IsEnabled = state }
-
-    match state with
-    | State.In ->
-        [ "Page1", MenuMessages.ToPage1, true
-          "Page2", MenuMessages.ToPage2, true
-          "GoOut", MenuMessages.GoOut, true ]
-    | State.Out ->
-        [ "Page1", MenuMessages.ToPage1, true
-          "Page2", MenuMessages.ToPage2, false
-          "ToInit", MenuMessages.ToStart, true ]
-    |> List.map toMenuItem
-
-let createMenu state = 
-    { Items = state |> createMenuItem
-      State = state }
-    
-let defMenu = { 
-    Menu = 
-      { Items = []
-        State = State.Out }
-    Request = Vm.cmd MenuMessages.ToStart
-}
-
-let menuComponent = 
-    Component.create<Menu, NavMessages, MenuMessages> [
-        <@ defMenu.Menu.Items @> |> Bind.oneWay (fun vm -> vm.Items)
-        <@ defMenu.Request @> |> Bind.cmdParam (fun vm -> vm)
-        <@ defMenu.Menu.State @> |> Bind.oneWay (fun vm -> vm.State)
-    ] |> Component.withMappedMessages Messages.MenuUpdate
-
-let toNavigation =
-    function
-    | MenuMessages.ToPage1 -> NavMessages.Page1
-    | MenuMessages.ToPage2 -> NavMessages.Page2
-    | MenuMessages.ToStart 
-    | MenuMessages.GoOut -> NavMessages.Init
+let appComp =
+    Component.create<AppModel, NavMessages, Messages> [
+        <@ init.Page @> |> Bind.comp (fun m -> m.Page) pageComponent fst
+        <@ init.Menu @> |> Bind.comp (fun m -> m.Menu) menuComponent fst
+        <@ init.Init @> |> Bind.comp (fun m -> m.Init) initComponent fst
+    ]
 
 let upd (nav : Dispatcher<NavMessages>) message model = 
     printfn "mesage = %A" message
@@ -134,43 +158,43 @@ let upd (nav : Dispatcher<NavMessages>) message model =
     | Messages.MenuUpdate upd -> 
         upd |> toNavigation |> nav.Dispatch
         match upd with
-        | MenuMessages.GoOut -> State.Out
-        | _ -> model.State 
-        |> createMenu
+        | MenuMessages.GoOut -> 
+            let state = State.Out
+            { model with State = state; Menu = state |> createMenu }
+        | _ -> model
     | Messages.GoIn ->
         NavMessages.Page1 |> nav.Dispatch
-        State.In |> createMenu
+        let state = State.In
+        { model with Menu = state |> createMenu ; State = state }
 
 open Gjallarhorn.Bindable.Framework
 
 let applicationCore nav =
     let navigation = Dispatcher<NavMessages>()
-    let state = State.Out
-    let init = createMenu state
-    Framework.application init (upd navigation) menuComponent nav
+    Framework.application init (upd navigation) appComp nav
     |> Framework.withNavigation navigation
 
 [<EntryPoint>]
 [<STAThread>]
 let main _ = 
-    let updateNavigation (app : ApplicationCore<Menu,_,_>) request =
+    let updateNavigation (app : ApplicationCore<AppModel,_,_>) request =
         match request with
         | NavMessages.Page1  ->
             Navigation.Page.fromComponent
                 Views.createPage1
-                (fun _ -> { Text = "This is the first page" })
+                (fun _ -> { PageText = "This is the first page" })
                 pageComponent 
                 id
         | NavMessages.Page2  ->
             Navigation.Page.fromComponent
                 Views.createPage2
-                (fun _ -> { Text = "This is the second page" })
+                (fun _ -> { PageText = "This is the second page" })
                 pageComponent 
                 id
         | NavMessages.Init  ->
             Navigation.Page.fromComponent
                 Views.createInit
-                (fun _ -> defi)
+                (fun m -> m.Init)
                 initComponent 
                 id
 
